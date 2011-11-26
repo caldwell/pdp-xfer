@@ -1,0 +1,51 @@
+#!/usr/bin/perl
+#  Copyright (c) 2011 David Caldwell,  All Rights Reserved.
+use warnings; use strict; use v5.12;
+
+sub trim($) { $_[0] =~ s/^\s+//g; $_[0] }
+
+my $file= '';
+$file .= trim uc for (<>);
+
+$file =~ s/^\s*'.*\n//mg; # comments
+$file =~ s/^\s*(\w+:)\s+\n?/$1 /mg; # slide goto labels onto the line they're labeling
+
+my $num=0;
+my @file = map { $num += 10; {num=>$num, line=>$_ } } split(/\n/, $file);
+
+my %symbol;
+# Let us use labels instead of line numbers!
+for (@file) { $symbol{$1} = $_->{num} if $_->{line} =~ s/^(\w+): // }
+$_->{line} =~ s/(GOTO|GOSUB) (\w+)/$1 $symbol{$2}/ for (@file);
+
+for (@file) { $symbol{$1} = $_->{num} if $_->{line} =~ s/^(\w+): // }
+
+sub uniq(@) { my %u = map { ($_ => 1) } @_; keys %u };
+
+# Let us use long variable names!!
+my %var;
+my @short_var = split //, "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+my @short_str = split //, "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+sub alloc_var {
+    my ($long) = @_;
+    $var{$long} // ($var{$long} = $long =~ /\$$/ ? shift(@short_str).'$' : shift(@short_var));
+}
+
+my %reserved = map { (uc $_ => 1) } qw(chr$ seg$ dat$ str$ trm$);
+alloc_var($_) for (uniq map {
+    my @str = grep { !$reserved{$_} } $_->{line} =~ /\b([\w_]+\$)/g;
+    my @let = $_->{line} =~ /\bLET\s+([\w_]+)\s*=/g;
+    (@str, @let)
+} @file);
+
+#use Data::Dumper;
+#print Dumper \%var;
+
+my $re = '('.join('|', map { "\\b$_".(/\$$/ ? '' : '\b') } keys %var).')';
+$re =~ s/\$/\\\$/g;
+#warn "$re";
+$_->{line} =~ s/$re/$var{$1}/ge for @file;
+
+print map { "$_->{num} $_->{line}\n" } @file;
+
+#print Dumper \@file, \%symbol;
