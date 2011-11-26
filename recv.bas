@@ -1,5 +1,4 @@
 '  Copyright (c) 2011 David Caldwell,  All Rights Reserved.
-' split returns an array
 recv_file:
     print "<filename>"
     input line$
@@ -11,7 +10,6 @@ open "dx1:"&filename$ for output as file #1
 
 Let byte=0
 Let checksum=0
-dim split$(32)
 out$ = ""
 Line:
     Input line$
@@ -19,11 +17,6 @@ Line:
 
     GoSub split
 
-    For x=1 to split_n
-        o = Val(split$(x))
-        checksum = checksum + o
-        out$ = out$ & chr$(o)
-    next x
     If Len(out$) > 200 Then GoSub Print_it
     byte = byte + split_n
     Print "<";byte;",";checksum;">"
@@ -43,11 +36,14 @@ split:
     Let split_n=1
     Let s_start=1
     If line$ = "" Then split_n = 0 \ Return
+    Let Line_Len = Len(line$)
 nextword:
     Let space=pos(line$," ",s_start)
-    If space = 0 Then space = Len(line$)+1
-    split$(split_n)=seg$(line$,s_start,space-1)
+    If space = 0 Then space = Line_len+1
+    Let out = Val(seg$(line$,s_start,space-1))
+    checksum = checksum + out
+    out$ = out$ & chr$(out)
     s_start = Space+1
-    If s_start > Len(line$) Then return
+    If s_start > Line_len Then return
     split_n = split_n + 1
     GoTo nextword
