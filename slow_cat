@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+#  Copyright (c) 2011 David Caldwell,  All Rights Reserved.
+use strict; use warnings; use v5.12;
+
+use Time::HiRes qw(time sleep);
+
+my $char__sec = shift;
+
+$|=1;
+
+while (<>) {
+    my @c = split //;
+    my $start = time;
+    for (0..$#c) {
+        my $delay = $_ / $char__sec - (time - $start);
+        sleep($delay) if $delay > 0;
+        print $c[$_];
+    }
+}
