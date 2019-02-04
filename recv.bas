@@ -42,6 +42,8 @@ nextword:
     If space = 0 Then space = Line_len+1
     Let out = Val(seg$(line$,s_start,space-1))
     checksum = checksum + out
+    ' Modulo with 1,000,000 since basic starts printing in scientific notation there.
+    If checksum > 1000000 Then checksum = checksum - 1000000
     out$ = out$ & chr$(out)
     s_start = Space+1
     If s_start > Line_len Then return

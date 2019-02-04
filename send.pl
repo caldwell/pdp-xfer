@@ -39,7 +39,7 @@ for my $filename (@ARGV) {
         print $remote join(" ", @data = unpack("C*", $data)), "\r";
 
         $count += length $data;
-        $checksum += sum(@data);
+        $checksum = ($checksum + sum(@data)) % 1_000_000;
 
         while (<$remote>) {
             if (/<\s*(\d+)\s*,\s*(\d+)\s*>/) {
